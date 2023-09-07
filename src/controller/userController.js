@@ -4,6 +4,8 @@ import bcrypt,{hash} from "bcrypt"
 import errorResponse from "../utils/errorResponse";
 import successResponse from "../utils/successResponse"
 
+import jwt from "jsonwebtoken"
+
 class usercontroller {
   static async createUser(req, res) {
 
@@ -28,7 +30,37 @@ return successResponse(res,status,msg,data);
       }
     }
   }
+static async login(req,res){
 
+  const {email,password}=req.body
+  const usr=await User.findOne({email})
+
+  if(!usr){
+    return errorResponse(res,401,`invalid email or password`)
+  }
+else{
+  const comparePassword=bcrypt.compareSync(password,usr.password)
+
+  if (!comparePassword){
+    return errorResponse(res,401,`invalid email or password`)
+  }
+
+  else{
+    const token=jwt.sign({role:usr.role,email:usr.email,firstname:usr.firstname},
+      process.env.SECRET_KEY,{expiresIn:"1d"})
+
+    return res.status(200).json({
+      token:token,
+      data:{
+        email:usr.email,
+        firstname:usr.firstname,
+        role:usr.role
+
+      }
+    })
+  }
+}
+}
 
   static async getAllUsers(req, res) {
     const hell = await User.find();
@@ -61,6 +93,26 @@ else{
   return successResponse(res,200,`user successfuly retrieved`,user)
 }
 
+}
+
+static async deleteOneUser(req,res){
+  const id=req.params.id
+  const userd=await User.findByIdAndDelete(id)
+  if(!userd){
+    errorResponse(res,401,`user with id ${id} not found`)
+  }else{
+    successResponse(res,200,`user successfuly deleted`,userd)
+  }
+}
+
+static async upadateUser(req,res){
+  const id= req.params.id
+  const userd=await User.findByIdAndUpdate(id,req.body,{new:true})
+  if(!userd){
+    errorResponse(res,401,`user with id ${id} not updated`)
+  }else{
+    successResponse(res,200,`user succefuly updated`,userd)
+  }
 }
 
 }
