@@ -1,7 +1,7 @@
-const successResponse=(res,status,mesg,datas)=>{
+const successResponse=(res,status,message,data)=>{
     res.status(status).json({
-        message:mesg,
-        data:datas
+        message:message,
+        data:data
     })
 }
 
